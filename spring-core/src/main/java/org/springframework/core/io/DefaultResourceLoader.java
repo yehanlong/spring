@@ -45,11 +45,13 @@ import org.springframework.util.StringUtils;
  * @see FileSystemResourceLoader
  * @see org.springframework.context.support.ClassPathXmlApplicationContext
  */
+//默认的资源加载器
 public class DefaultResourceLoader implements ResourceLoader {
 
 	@Nullable
 	private ClassLoader classLoader;
 
+	//自定义ProtocolResolver, 用于获取资源
 	private final Set<ProtocolResolver> protocolResolvers = new LinkedHashSet<>(4);
 
 	private final Map<Class<?>, Map<Resource, ?>> resourceCaches = new ConcurrentHashMap<>(4);
@@ -61,6 +63,7 @@ public class DefaultResourceLoader implements ResourceLoader {
 	 * at the time of this ResourceLoader's initialization.
 	 * @see java.lang.Thread#getContextClassLoader()
 	 */
+	//实例化ClassLoader
 	public DefaultResourceLoader() {
 		this.classLoader = ClassUtils.getDefaultClassLoader();
 	}
@@ -140,31 +143,42 @@ public class DefaultResourceLoader implements ResourceLoader {
 	}
 
 
+	//加载资源
 	@Override
 	public Resource getResource(String location) {
 		Assert.notNull(location, "Location must not be null");
 
+		//自定义资源加载方式
 		for (ProtocolResolver protocolResolver : this.protocolResolvers) {
+			//调用ProtocolResolver的resolve方法
 			Resource resource = protocolResolver.resolve(location, this);
 			if (resource != null) {
+				//如果获取到资源,立即返回
 				return resource;
 			}
 		}
 
 		if (location.startsWith("/")) {
+			//先判断是否是根目录
 			return getResourceByPath(location);
 		}
 		else if (location.startsWith(CLASSPATH_URL_PREFIX)) {
+			//再判断是否是classpath下的资源
 			return new ClassPathResource(location.substring(CLASSPATH_URL_PREFIX.length()), getClassLoader());
 		}
 		else {
 			try {
 				// Try to parse the location as a URL...
+				//先当做一个URL处理
 				URL url = new URL(location);
+				//先判断是否是一个file
+				//不是file的话,再从URL中获取
 				return (ResourceUtils.isFileURL(url) ? new FileUrlResource(url) : new UrlResource(url));
 			}
 			catch (MalformedURLException ex) {
 				// No URL -> resolve as resource path.
+				//获取不到资源的话
+				//当做resource处理
 				return getResourceByPath(location);
 			}
 		}

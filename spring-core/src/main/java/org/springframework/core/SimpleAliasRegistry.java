@@ -38,12 +38,15 @@ import org.springframework.util.StringValueResolver;
  * @author Juergen Hoeller
  * @since 2.5.2
  */
+//提供了bean别名的增删改查功能
 public class SimpleAliasRegistry implements AliasRegistry {
 
 	/** Logger available to subclasses */
 	protected final Log logger = LogFactory.getLog(getClass());
 
 	/** Map from alias to canonical name */
+	//key是bean别名
+	//value是原始bean名称
 	private final Map<String, String> aliasMap = new ConcurrentHashMap<>(16);
 
 

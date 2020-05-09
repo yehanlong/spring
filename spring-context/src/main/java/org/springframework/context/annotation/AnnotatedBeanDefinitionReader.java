@@ -45,12 +45,16 @@ import org.springframework.util.Assert;
  * @since 3.0
  * @see AnnotationConfigApplicationContext#register
  */
+//注解Bean读取器
+//用来读取和解析bean
 public class AnnotatedBeanDefinitionReader {
 
 	private final BeanDefinitionRegistry registry;
 
+	//bean名称生成器
 	private BeanNameGenerator beanNameGenerator = new AnnotationBeanNameGenerator();
 
+	//Scope解析器
 	private ScopeMetadataResolver scopeMetadataResolver = new AnnotationScopeMetadataResolver();
 
 	private ConditionEvaluator conditionEvaluator;
@@ -66,6 +70,7 @@ public class AnnotatedBeanDefinitionReader {
 	 * @see #AnnotatedBeanDefinitionReader(BeanDefinitionRegistry, Environment)
 	 * @see #setEnvironment(Environment)
 	 */
+	//registry传入的AnnotationConfigServletWebServerApplicationContext对象
 	public AnnotatedBeanDefinitionReader(BeanDefinitionRegistry registry) {
 		this(registry, getOrCreateEnvironment(registry));
 	}
@@ -79,6 +84,8 @@ public class AnnotatedBeanDefinitionReader {
 	 * profiles.
 	 * @since 3.1
 	 */
+	//构造函数
+	//传入的registry就是AnnotationConfigServletWebServerApplicationContext实例
 	public AnnotatedBeanDefinitionReader(BeanDefinitionRegistry registry, Environment environment) {
 		Assert.notNull(registry, "BeanDefinitionRegistry must not be null");
 		Assert.notNull(environment, "Environment must not be null");

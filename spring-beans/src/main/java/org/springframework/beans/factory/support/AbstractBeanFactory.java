@@ -109,6 +109,7 @@ import org.springframework.util.StringValueResolver;
  * @see AbstractAutowireCapableBeanFactory#createBean
  * @see DefaultListableBeanFactory#getBeanDefinition
  */
+//抽象BeanFactory, 定义了通用的beanFactory的模板方法, 添加了对beanFactory对Scope的支持, scope主要有五种, singleton, prototype, request, session和application,
 public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport implements ConfigurableBeanFactory {
 
 	/** Parent bean factory, for bean inheritance support */

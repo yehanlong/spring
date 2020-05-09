@@ -64,6 +64,7 @@ public abstract class AbstractEnvironment implements ConfigurableEnvironment {
 	 * with strict SecurityManager settings and AccessControlExceptions warnings.
 	 * @see #suppressGetenvAccess()
 	 */
+	// 存ignore的profile的
 	public static final String IGNORE_GETENV_PROPERTY_NAME = "spring.getenv.ignore";
 
 	/**
@@ -75,6 +76,7 @@ public abstract class AbstractEnvironment implements ConfigurableEnvironment {
 	 * {@code SPRING_PROFILES_ACTIVE}.
 	 * @see ConfigurableEnvironment#setActiveProfiles
 	 */
+	// 存 active常量的
 	public static final String ACTIVE_PROFILES_PROPERTY_NAME = "spring.profiles.active";
 
 	/**
@@ -103,12 +105,16 @@ public abstract class AbstractEnvironment implements ConfigurableEnvironment {
 
 	protected final Log logger = LogFactory.getLog(getClass());
 
+	// 存有效profile的集合
 	private final Set<String> activeProfiles = new LinkedHashSet<>();
 
+	// 存默认profile的集合
 	private final Set<String> defaultProfiles = new LinkedHashSet<>(getReservedDefaultProfiles());
-
+	// 这才是最终存储环境配置信息的地方
 	private final MutablePropertySources propertySources = new MutablePropertySources(this.logger);
 
+	// 这个才是最重要的一个解析器，暂时可以知道，解析器的实现类是 PropertySourcesPropertyResolver
+	// 而存储配置信息的载体是 MutablePropertySources，有没有想到 @PropertySource这个注解？
 	private final ConfigurablePropertyResolver propertyResolver =
 			new PropertySourcesPropertyResolver(this.propertySources);
 
@@ -121,6 +127,7 @@ public abstract class AbstractEnvironment implements ConfigurableEnvironment {
 	 * @see #customizePropertySources(MutablePropertySources)
 	 */
 	public AbstractEnvironment() {
+		//是StandardServletEnvironment类里的方法
 		customizePropertySources(this.propertySources);
 		if (logger.isDebugEnabled()) {
 			logger.debug("Initialized " + getClass().getSimpleName() + " with PropertySources " + this.propertySources);

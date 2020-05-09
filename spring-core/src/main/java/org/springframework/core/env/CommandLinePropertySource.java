@@ -204,9 +204,15 @@ import org.springframework.util.StringUtils;
  * @see SimpleCommandLinePropertySource
  * @see JOptCommandLinePropertySource
  */
+//抽象命令行参数类, 定义了两种类型的命令行参数key
+//
+//    以--开头的命令行参数, 保存到key为commandLineArgs的PropertySource中
+//    不以--开头的命令行参数, 保存到key为nonOptionArgs的PropertySource中
 public abstract class CommandLinePropertySource<T> extends EnumerablePropertySource<T> {
 
 	/** The default name given to {@link CommandLinePropertySource} instances: {@value} */
+	//命令行参数key
+	//保存所有的命令行参数
 	public static final String COMMAND_LINE_PROPERTY_SOURCE_NAME = "commandLineArgs";
 
 	/** The default name of the property representing non-option arguments: {@value} */

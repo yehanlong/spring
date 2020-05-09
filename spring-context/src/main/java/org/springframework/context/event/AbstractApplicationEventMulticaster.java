@@ -59,11 +59,17 @@ import org.springframework.util.ObjectUtils;
  * @see #getApplicationListeners(ApplicationEvent, ResolvableType)
  * @see SimpleApplicationEventMulticaster
  */
+//抽象事件广播器
 public abstract class AbstractApplicationEventMulticaster
 		implements ApplicationEventMulticaster, BeanClassLoaderAware, BeanFactoryAware {
 
+	//监听器遍历器
+	//成员变量applicationListeners Set维护了application中包含的listeners,
+	//成员变量applicationListenerBeans Set维护了注入的listener bean名称
 	private final ListenerRetriever defaultRetriever = new ListenerRetriever(false);
 
+	//调用getApplicationListeners()方法之后
+	//缓存spring事件以及对应的listener列表
 	final Map<ListenerCacheKey, ListenerRetriever> retrieverCache = new ConcurrentHashMap<>(64);
 
 	@Nullable
@@ -106,11 +112,14 @@ public abstract class AbstractApplicationEventMulticaster
 		synchronized (this.retrievalMutex) {
 			// Explicitly remove target for a proxy, if registered already,
 			// in order to avoid double invocations of the same listener.
+			//监听器已经被加载过,
+			//先执行删除操作,防止重复执行
 			Object singletonTarget = AopProxyUtils.getSingletonTarget(listener);
 			if (singletonTarget instanceof ApplicationListener) {
 				this.defaultRetriever.applicationListeners.remove(singletonTarget);
 			}
 			this.defaultRetriever.applicationListeners.add(listener);
+			//清空缓存
 			this.retrieverCache.clear();
 		}
 	}
@@ -169,6 +178,8 @@ public abstract class AbstractApplicationEventMulticaster
 	 * @return a Collection of ApplicationListeners
 	 * @see org.springframework.context.ApplicationListener
 	 */
+	 //获取支持监听event的listener
+	 //这里使用了单例模式
 	protected Collection<ApplicationListener<?>> getApplicationListeners(
 			ApplicationEvent event, ResolvableType eventType) {
 
@@ -177,6 +188,7 @@ public abstract class AbstractApplicationEventMulticaster
 		ListenerCacheKey cacheKey = new ListenerCacheKey(eventType, sourceType);
 
 		// Quick check for existing entry on ConcurrentHashMap...
+		//尝试从ConcurrentHashMap缓存中取出listener列表
 		ListenerRetriever retriever = this.retrieverCache.get(cacheKey);
 		if (retriever != null) {
 			return retriever.getApplicationListeners();
@@ -186,7 +198,13 @@ public abstract class AbstractApplicationEventMulticaster
 				(ClassUtils.isCacheSafe(event.getClass(), this.beanClassLoader) &&
 						(sourceType == null || ClassUtils.isCacheSafe(sourceType, this.beanClassLoader)))) {
 			// Fully synchronized building and caching of a ListenerRetriever
+			//双重检查锁定
+			//当多线程访问的时候,
+			//之前retriever多个线程否返回null,
+			//此时锁住this.retrievalMutex
+			//防止多次实例化
 			synchronized (this.retrievalMutex) {
+				//再尝试从cache中获取
 				retriever = this.retrieverCache.get(cacheKey);
 				if (retriever != null) {
 					return retriever.getApplicationListeners();
@@ -194,12 +212,14 @@ public abstract class AbstractApplicationEventMulticaster
 				retriever = new ListenerRetriever(true);
 				Collection<ApplicationListener<?>> listeners =
 						retrieveApplicationListeners(eventType, sourceType, retriever);
+				//生成Key和Value放入缓存中
 				this.retrieverCache.put(cacheKey, retriever);
 				return listeners;
 			}
 		}
 		else {
 			// No ListenerRetriever caching -> no synchronization necessary
+			//没有缓存ListenerRetriever,那么就不需要同步
 			return retrieveApplicationListeners(eventType, sourceType, null);
 		}
 	}
@@ -275,6 +295,9 @@ public abstract class AbstractApplicationEventMulticaster
 	 * @return whether the given listener should be included in the candidates
 	 * for the given event type
 	 */
+	//retrieveApplicationListeners方法中
+	//调用了supportsEvent方法
+	//supportsEvent使用了适配器模式
 	protected boolean supportsEvent(Class<?> listenerType, ResolvableType eventType) {
 		if (GenericApplicationListener.class.isAssignableFrom(listenerType) ||
 				SmartApplicationListener.class.isAssignableFrom(listenerType)) {

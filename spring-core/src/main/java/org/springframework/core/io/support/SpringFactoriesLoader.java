@@ -65,11 +65,13 @@ public abstract class SpringFactoriesLoader {
 	 * The location to look for factories.
 	 * <p>Can be present in multiple JAR files.
 	 */
+	//所有jar包中的META-INF/spring.factories文件
 	public static final String FACTORIES_RESOURCE_LOCATION = "META-INF/spring.factories";
 
 
 	private static final Log logger = LogFactory.getLog(SpringFactoriesLoader.class);
 
+	//缓存
 	private static final Map<ClassLoader, MultiValueMap<String, String>> cache = new ConcurrentReferenceHashMap<>();
 
 
@@ -113,18 +115,24 @@ public abstract class SpringFactoriesLoader {
 	 * @throws IllegalArgumentException if an error occurs while loading factory names
 	 * @see #loadFactories
 	 */
+	//获取类型为factoryClass对象的所有子类名称
 	public static List<String> loadFactoryNames(Class<?> factoryClass, @Nullable ClassLoader classLoader) {
 		String factoryClassName = factoryClass.getName();
+		//获取名称列表,如果为空,那么返回Collections.emptyList()
 		return loadSpringFactories(classLoader).getOrDefault(factoryClassName, Collections.emptyList());
 	}
 
+	//获取所有META-INF/spring.factories文件中维护的子类名
 	private static Map<String, List<String>> loadSpringFactories(@Nullable ClassLoader classLoader) {
+		//缓存中获取
+		//如果缓存中存在,那么立即返回
 		MultiValueMap<String, String> result = cache.get(classLoader);
 		if (result != null) {
 			return result;
 		}
 
 		try {
+			//缓存中不存在的话,遍历各个jar包中的spring.factories文件
 			Enumeration<URL> urls = (classLoader != null ?
 					classLoader.getResources(FACTORIES_RESOURCE_LOCATION) :
 					ClassLoader.getSystemResources(FACTORIES_RESOURCE_LOCATION));
@@ -134,13 +142,16 @@ public abstract class SpringFactoriesLoader {
 				UrlResource resource = new UrlResource(url);
 				Properties properties = PropertiesLoaderUtils.loadProperties(resource);
 				for (Map.Entry<?, ?> entry : properties.entrySet()) {
+					//封装固定格式的Map
 					String factoryClassName = ((String) entry.getKey()).trim();
 					for (String factoryName : StringUtils.commaDelimitedListToStringArray((String) entry.getValue())) {
 						result.add(factoryClassName, factoryName.trim());
 					}
 				}
 			}
+			//封装固定格式的Map
 			cache.put(classLoader, result);
+			//返回对象
 			return result;
 		}
 		catch (IOException ex) {

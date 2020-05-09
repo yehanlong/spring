@@ -45,6 +45,8 @@ import org.springframework.util.MultiValueMap;
  * @author Juergen Hoeller
  * @since 4.0
  */
+//@Conditional注解的解析器
+//也可用于@ConditionalOnBean,@ConditionalOnClass,@ConditionalOnExpression,@ConditionalOnMissingBean等子注解
 class ConditionEvaluator {
 
 	private final ConditionContextImpl context;
@@ -77,20 +79,26 @@ class ConditionEvaluator {
 	 * @param phase the phase of the call
 	 * @return if the item should be skipped
 	 */
+	//判断是否应该跳过
 	public boolean shouldSkip(@Nullable AnnotatedTypeMetadata metadata, @Nullable ConfigurationPhase phase) {
 		if (metadata == null || !metadata.isAnnotated(Conditional.class.getName())) {
+			//metadata为空或者没有使用@Conditional注解,不跳过
 			return false;
 		}
 
 		if (phase == null) {
+			//ConfigurationPhase对象为空,也就是没有设置生效条件
 			if (metadata instanceof AnnotationMetadata &&
 					ConfigurationClassUtils.isConfigurationCandidate((AnnotationMetadata) metadata)) {
+				//如果是注解的话,使用PARSE_CONFIGURATION配置验证是否跳过
 				return shouldSkip(metadata, ConfigurationPhase.PARSE_CONFIGURATION);
 			}
+			//不是注解的话,使用REGISTER_BEAN配置验证是否跳过
 			return shouldSkip(metadata, ConfigurationPhase.REGISTER_BEAN);
 		}
 
 		List<Condition> conditions = new ArrayList<>();
+		//遍历配置类的条件注解,得到条件数据,放到conditions集合中
 		for (String[] conditionClasses : getConditionClasses(metadata)) {
 			for (String conditionClass : conditionClasses) {
 				Condition condition = getCondition(conditionClass, this.context.getClassLoader());
@@ -98,13 +106,16 @@ class ConditionEvaluator {
 			}
 		}
 
+		//按Order注解排序
 		AnnotationAwareOrderComparator.sort(conditions);
 
+		//条件排序
 		for (Condition condition : conditions) {
 			ConfigurationPhase requiredPhase = null;
 			if (condition instanceof ConfigurationCondition) {
 				requiredPhase = ((ConfigurationCondition) condition).getConfigurationPhase();
 			}
+			//添加验证满足,那就跳过
 			if ((requiredPhase == null || requiredPhase == phase) && !condition.matches(this.context, metadata)) {
 				return true;
 			}

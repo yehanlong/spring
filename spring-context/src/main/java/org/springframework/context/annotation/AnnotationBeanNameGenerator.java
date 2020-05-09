@@ -61,21 +61,29 @@ import org.springframework.util.StringUtils;
  * @see org.springframework.stereotype.Controller#value()
  * @see javax.inject.Named#value()
  */
+//bean名称生成器
+//主要为Component注解生成名称
+//包括Component子注解: Component，Respository，Service，Controller
 public class AnnotationBeanNameGenerator implements BeanNameGenerator {
 
+	//Spring Component注解
 	private static final String COMPONENT_ANNOTATION_CLASSNAME = "org.springframework.stereotype.Component";
 
 
 	@Override
 	public String generateBeanName(BeanDefinition definition, BeanDefinitionRegistry registry) {
+		//如果是注解的bean定义
 		if (definition instanceof AnnotatedBeanDefinition) {
+			//先从注解获取bean名称
 			String beanName = determineBeanNameFromAnnotation((AnnotatedBeanDefinition) definition);
+			//不为空直接返回
 			if (StringUtils.hasText(beanName)) {
 				// Explicit bean name found.
 				return beanName;
 			}
 		}
 		// Fallback: generate a unique default bean name.
+		//注解没有定义bean名称,那么构造一个bean名称
 		return buildDefaultBeanName(definition, registry);
 	}
 
@@ -148,10 +156,13 @@ public class AnnotationBeanNameGenerator implements BeanNameGenerator {
 	 * @param definition the bean definition to build a bean name for
 	 * @return the default bean name (never {@code null})
 	 */
+	//构造bean名称
 	protected String buildDefaultBeanName(BeanDefinition definition) {
 		String beanClassName = definition.getBeanClassName();
 		Assert.state(beanClassName != null, "No bean class name set");
+		//获取Class名称
 		String shortClassName = ClassUtils.getShortName(beanClassName);
+		//将类名作为bean名称
 		return Introspector.decapitalize(shortClassName);
 	}
 
