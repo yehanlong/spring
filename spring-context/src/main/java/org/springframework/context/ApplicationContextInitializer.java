@@ -38,6 +38,18 @@ package org.springframework.context;
  * @see org.springframework.web.servlet.FrameworkServlet#setContextInitializerClasses
  * @see org.springframework.web.servlet.FrameworkServlet#applyInitializers
  */
+
+//这个类的主要作用就是在ConfigurableApplicationContext类型(或者子类型)的
+// ApplicationContext做refresh之前，允许我们对ConfiurableApplicationContext的实例做进一步的设置和处理
+
+//是在spring容器刷新之前执行的一个回调函数。是在ConfigurableApplicationContext#refresh() 之前调用
+// （当spring框架内部执行 ConfigurableApplicationContext#refresh() 方法的时候或者在SpringBoot的run()执行时），
+// 作用是初始化Spring ConfigurableApplicationContext的回调接口
+
+//在一个Springboot应用中，classpath上会包含很多jar包，
+// 有些jar包需要在ConfigurableApplicationContext#refresh()调用之前对应用上下文做一些初始化动作，
+// 因此它们会提供自己的ApplicationContextInitializer实现类，
+// 然后放在自己的META-INF/spring.factories属性文件中，这样相应的ApplicationContextInitializer实现类就会被SpringApplication#initialize发现
 public interface ApplicationContextInitializer<C extends ConfigurableApplicationContext> {
 
 	/**

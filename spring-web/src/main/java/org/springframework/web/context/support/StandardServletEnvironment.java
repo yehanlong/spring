@@ -42,6 +42,7 @@ import org.springframework.web.context.ConfigurableWebEnvironment;
  * @since 3.1
  * @see StandardEnvironment
  */
+//用于web应用，所有基于web的ApplicationContext 类默认都会初始化一个实例
 public class StandardServletEnvironment extends StandardEnvironment implements ConfigurableWebEnvironment {
 
 	/** Servlet context init parameters property source name: {@value} */
@@ -80,6 +81,7 @@ public class StandardServletEnvironment extends StandardEnvironment implements C
 	 * @see org.springframework.context.support.AbstractApplicationContext#initPropertySources
 	 * @see #initPropertySources(ServletContext, ServletConfig)
 	 */
+	//基于servlet的属性源在这一步会先存起来，当ServletObject变得可用的时候，他会完全初始化。
 	@Override
 	protected void customizePropertySources(MutablePropertySources propertySources) {
 		propertySources.addLast(new StubPropertySource(SERVLET_CONFIG_PROPERTY_SOURCE_NAME));
