@@ -60,9 +60,9 @@ public class SimpleInstantiationStrategy implements InstantiationStrategy {
 	@Override
 	public Object instantiate(RootBeanDefinition bd, @Nullable String beanName, BeanFactory owner) {
 		// Don't override the class with CGLIB if no overrides.
-		//／／如果有需要在i盖或者动态替换的方法则当然需要使用cg lib 进行动态代理，因为可以在创建代理的同时
-		//／／将动态方法织人类中
-		//／／但是如果没有需要动态改变得方法， 为了方便直接反射就可以了
+		//如果有需要在覆盖或者动态替换的方法则当然需要使用cglib 进行动态代理，因为可以在创建代理的同时
+		//将动态方法织人类中
+		//但是如果没有需要动态改变得方法， 为了方便直接反射就可以了
 		if (!bd.hasMethodOverrides()) {
 			Constructor<?> constructorToUse;
 			synchronized (bd.constructorArgumentLock) {
@@ -112,6 +112,11 @@ public class SimpleInstantiationStrategy implements InstantiationStrategy {
 	public Object instantiate(RootBeanDefinition bd, @Nullable String beanName, BeanFactory owner,
 			final Constructor<?> ctor, @Nullable Object... args) {
 
+		//先判断如果beanDefinition.getMethodOverrides()为空也就是用户没有使用replace或者lookup的配置方法，
+		// 那么直接使用反射的方式，简单快捷，
+		// 但是如果使用了这两个特性，在直接使用反射的方式创建实例就不妥了，
+		// 因为需要将这两个配置提供的功能切入进去，所以就必须要使用动态代理的方式将包含两个特性所对应的逻辑的拦截增强器设置进去，
+		// 这样才可以保证在调用方法的时候会被相应的拦截器增强，返回值为包含拦截器的代理实例
 		if (!bd.hasMethodOverrides()) {
 			if (System.getSecurityManager() != null) {
 				// use own privileged to change accessibility (when security is on)

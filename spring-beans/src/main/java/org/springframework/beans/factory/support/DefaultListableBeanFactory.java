@@ -741,13 +741,19 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 
 		// Iterate over a copy to allow for init methods which in turn register new bean definitions.
 		// While this may not be part of the regular factory bootstrap, it does otherwise work fine.
+		// 先得到BeanDefinitionMap中已经注册的所有Bean Definition名称
 		List<String> beanNames = new ArrayList<>(this.beanDefinitionNames);
 
 		// Trigger initialization of all non-lazy singleton beans...
 		for (String beanName : beanNames) {
+			// 获取bd(Bean Definition)，判断当前bd所代表的类不是Abstract的，也不是需要延迟加载的并且是单例的。
 			RootBeanDefinition bd = getMergedLocalBeanDefinition(beanName);
 			if (!bd.isAbstract() && bd.isSingleton() && !bd.isLazyInit()) {
+				// 判断当前bd代表的累是否为工厂，此方法内部会调用依次getObject方法，
+				// 由于Spring自己的类（BeanPostProcessor）在前面注册时已经实例化，故可以直接获取到。
+				// 而自定义的Bean在并不会生成对象，会通过bd来判断是否为工厂Bean，此处先不讨论FactoryBean的情况，先来分析普通Bean
 				if (isFactoryBean(beanName)) {
+					//通过上面的铺垫，getBean才是真正的重头戏
 					Object bean = getBean(FACTORY_BEAN_PREFIX + beanName);
 					if (bean instanceof FactoryBean) {
 						final FactoryBean<?> factory = (FactoryBean<?>) bean;
@@ -767,14 +773,18 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 					}
 				}
 				else {
+					// 这里从ioc容器中获取bean，如果不存在则创建
 					getBean(beanName);
 				}
 			}
 		}
 
 		// Trigger post-initialization callback for all applicable beans...
+		//获取所有的bean的名称 至此所有的单实例的bean已经加入到单实例Bean的缓存池中，所谓的单实例缓存池实际上就是一个ConcurrentHashMap
 		for (String beanName : beanNames) {
+			//从单例缓存池中获取所有的对象
 			Object singletonInstance = getSingleton(beanName);
+			//判断当前的bean是否实现了SmartInitializingSingleton接口
 			if (singletonInstance instanceof SmartInitializingSingleton) {
 				final SmartInitializingSingleton smartSingleton = (SmartInitializingSingleton) singletonInstance;
 				if (System.getSecurityManager() != null) {
@@ -784,6 +794,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 					}, getAccessControlContext());
 				}
 				else {
+					//触发实例化之后的方法afterSingletonsInstantiated
 					smartSingleton.afterSingletonsInstantiated();
 				}
 			}
